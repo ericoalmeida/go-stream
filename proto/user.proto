@@ -2,6 +2,8 @@ syntax = "proto3";
 package pb;
 option go_package = ".;pb";
 
+// user.proto is a protocol tha will be used to implement a service
+
 message User {
   string id = 1;
   string name = 2;
