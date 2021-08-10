@@ -10,6 +10,18 @@ message User {
   string email = 3;
 }
 
+// Message to implement ServerStream example
+message  UserResultStream {
+  string status = 1;
+  User user = 2;
+}
+
+message Users {
+  repeated User user = 1;
+}
+
 service UserService{
-  rpc AddUser(User) returns (User);
+  rpc AddUser(User) returns (User); // Method to single comunication example
+  rpc AddUserVerbose(User) returns (stream UserResultStream); // Method to ServerStream Example
+  rpc AddUsers(stream User) returns (Users); // Method to ClientStream Example
 }
