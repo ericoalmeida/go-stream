@@ -21,7 +21,7 @@ func main() {
 	defer connection.Close()
 
 	client := pb.NewUserServiceClient(connection)
-	AddUsers(client)
+	AddUserStreamBoth(client)
 }
 
 func AddUser(client pb.UserServiceClient) {
@@ -114,4 +114,79 @@ func AddUsers(client pb.UserServiceClient) {
 	}
 
 	fmt.Println(response)
+}
+
+func AddUserStreamBoth(client pb.UserServiceClient) {
+
+	stream, err := client.AddUserStreamBoth(context.Background())
+
+	if err != nil {
+		log.Fatalf("Error creating request: %v", err)
+	}
+
+	requests := []*pb.User{
+		{
+			Id:    "001",
+			Name:  "User 001",
+			Email: "user@email.com",
+		},
+		{
+			Id:    "002",
+			Name:  "User 002",
+			Email: "user@email.com",
+		},
+		{
+			Id:    "003",
+			Name:  "User 003",
+			Email: "user@email.com",
+		},
+		{
+			Id:    "004",
+			Name:  "User 004",
+			Email: "user@email.com",
+		},
+		{
+			Id:    "005",
+			Name:  "User 005",
+			Email: "user@email.com",
+		},
+	}
+
+	wait := make(chan int)
+
+	// The go anonymous functions will work in parallel
+
+	go func() {
+		// This is a "Thread" that will send data to server
+		for _, request := range requests {
+			fmt.Println("Sending user:", request.Name)
+
+			stream.Send(request)
+
+			time.Sleep(time.Second * 3)
+		}
+
+		stream.CloseSend()
+	}()
+
+	go func() {
+		// This is a "Thread" that will receive data from server
+		for {
+			response, err := stream.Recv()
+
+			if err == io.EOF {
+				break
+			}
+
+			if err != nil {
+				log.Fatalf("Error receiving stream from the server: %v", err)
+			}
+
+			fmt.Printf("Recebendo user %v com status: %v\n", response.GetUser().GetName(), response.GetStatus())
+		}
+
+		close(wait)
+	}()
+
+	<-wait
 }
